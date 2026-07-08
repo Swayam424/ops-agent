@@ -3,22 +3,36 @@ import os
 from dotenv import load_dotenv
 from groq import Groq
 
+from calendar_agent import handle_calendar
+from email_agent import handle_email
+from task_manager import handle_task
+
 load_dotenv()
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 
-def ask_orchestrator(user_input):
+def get_route_decision(user_input):
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
         messages=[
             {
                 "role": "system",
-                "content": "You are a planning orchestrator for a personal ops assistant. You don't execute tasks yourself — you decide which worker (task_manager, email_agent, calendar_agent) should handle the request. Just respond with your reasoning for now.",
+                "content": "You are a router. Given a user request, respond with ONLY ONE WORD: 'task', 'email', or 'calendar' — whichever worker should handle it. No explanation, no punctuation.",
             },
             {"role": "user", "content": user_input},
         ],
     )
-    return response.choices[0].message.content
+    return response.choices[0].message.content.strip().lower()
+
+
+def route_request(user_input):
+    decision = get_route_decision(user_input)
+    if "email" in decision:
+        return handle_email(user_input)
+    elif "calendar" in decision:
+        return handle_calendar(user_input)
+    else:
+        return handle_task(user_input)
 
 
 if __name__ == "__main__":
@@ -26,4 +40,4 @@ if __name__ == "__main__":
         q = input("You: ")
         if q.lower() == "exit":
             break
-        print("Orchestrator:", ask_orchestrator(q))
+        print("Router:", route_request(q))
