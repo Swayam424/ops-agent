@@ -1,8 +1,12 @@
 import json
 import os
+from dotenv import load_dotenv
+from groq import Groq
+
+load_dotenv()
+client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 
 TASKS_FILE = "tasks.json"
-
 
 def load_tasks():
     if not os.path.exists(TASKS_FILE):
@@ -10,14 +14,23 @@ def load_tasks():
     with open(TASKS_FILE, "r") as f:
         return json.load(f)
 
-
 def save_tasks(tasks):
     with open(TASKS_FILE, "w") as f:
         json.dump(tasks, f, indent=2)
 
+def extract_due_date(request):
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": "Extract only the due date/deadline mentioned in this request. Respond with ONLY the date/time phrase (e.g. 'tonight', 'friday', 'next week'). If none mentioned, respond 'unspecified'."},
+            {"role": "user", "content": request}
+        ]
+    )
+    return response.choices[0].message.content.strip()
 
 def handle_task(request):
     tasks = load_tasks()
-    tasks.append(request)
+    due = extract_due_date(request)
+    tasks.append({"text": request, "due": due})
     save_tasks(tasks)
-    return f"[task_manager] Saved task: '{request}' (total tasks: {len(tasks)})"
+    return f"[task_manager] Saved task: '{request}' (due: {due})"

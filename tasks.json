@@ -1,5 +1,10 @@
 [
-  "add milk to my grocery list",
-  "git add .",
-  ""
+  {
+    "text": "finish DAA assignment by tonight",
+    "due": "tonight"
+  },
+  {
+    "text": "git add .",
+    "due": "unspecified"
+  }
 ]
