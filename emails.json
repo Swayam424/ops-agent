@@ -2,5 +2,13 @@
   {
     "text": "tell mom i'll be late",
     "to": "TBD"
+  },
+  {
+    "text": "tell mom i'll be late for dinner",
+    "to": "mom"
+  },
+  {
+    "text": "tell mom i'll be late for dinner",
+    "to": "Mom"
   }
 ]
