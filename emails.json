@@ -10,5 +10,9 @@
   {
     "text": "tell mom i'll be late for dinner",
     "to": "Mom"
+  },
+  {
+    "text": "tell dad i'll be home late",
+    "to": "Dad"
   }
 ]

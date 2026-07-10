@@ -6,5 +6,9 @@
   {
     "text": "git add .",
     "due": "unspecified"
+  },
+  {
+    "text": "add eggs to my shopping list",
+    "due": "unspecified"
   }
 ]

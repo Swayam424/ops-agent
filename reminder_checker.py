@@ -3,13 +3,7 @@ import os
 import asyncio
 import discord
 from datetime import datetime
-from dotenv import load_dotenv
-from groq import Groq
-
-load_dotenv()
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
-DISCORD_TOKEN = os.getenv("DISCORD_TOKEN")
-CHANNEL_ID = 1427743642159681579
+from config import client, DISCORD_TOKEN, CHANNEL_ID
 
 def load_json(filename):
     if not os.path.exists(filename):

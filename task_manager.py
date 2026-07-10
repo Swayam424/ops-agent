@@ -1,10 +1,6 @@
 import json
 import os
-from dotenv import load_dotenv
-from groq import Groq
-
-load_dotenv()
-client = Groq(api_key=os.getenv("GROQ_API_KEY"))
+from config import client
 
 TASKS_FILE = "tasks.json"
 

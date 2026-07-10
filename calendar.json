@@ -10,5 +10,25 @@
   {
     "text": "Remind me to submit my assignment by tonight",
     "date": "tonight"
+  },
+  {
+    "text": "buy milk tomorrow",
+    "date": "tomorrow"
+  },
+  {
+    "text": "Router: [calendar_agent] Saved event: 'buy milk tomorrow' (date: tomorrow)",
+    "date": "tomorrow"
+  },
+  {
+    "text": "schedule dentist appointment friday",
+    "date": "Friday"
+  },
+  {
+    "text": "finish reading chapter 3 by sunday",
+    "date": "Sunday"
+  },
+  {
+    "text": "Remind me to finish my oops assignment tonight",
+    "date": "tonight"
   }
 ]
