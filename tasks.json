@@ -1,34 +1,6 @@
 [
   {
-    "text": "finish DAA assignment by tonight",
-    "due": "tonight"
-  },
-  {
-    "text": "git add .",
-    "due": "unspecified"
-  },
-  {
-    "text": "add eggs to my shopping list",
-    "due": "unspecified"
-  },
-  {
-    "text": "submit assignment tonight",
-    "due": "tonight"
-  },
-  {
-    "text": "buy groceries tomorrow",
+    "text": "remind me to buy milk tomorrow",
     "due": "tomorrow"
-  },
-  {
-    "text": "call insurance",
-    "due": "unspecified"
-  },
-  {
-    "text": "buy groceries tomorrow",
-    "due": "tomorrow"
-  },
-  {
-    "text": "submit assignment tonight",
-    "due": "tonight"
   }
 ]
