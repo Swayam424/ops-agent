@@ -10,5 +10,13 @@
   {
     "text": "add eggs to my shopping list",
     "due": "unspecified"
+  },
+  {
+    "text": "submit assignment tonight",
+    "due": "tonight"
+  },
+  {
+    "text": "buy groceries tomorrow",
+    "due": "tomorrow"
   }
 ]
