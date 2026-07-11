@@ -38,5 +38,9 @@
   {
     "text": "dentist appointment tomorrow",
     "date": "tomorrow"
+  },
+  {
+    "text": "schedule a meeting with professor friday",
+    "date": "Friday"
   }
 ]

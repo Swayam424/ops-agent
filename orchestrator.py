@@ -22,11 +22,14 @@ def decompose_request(user_input):
                 "Break the user's message into one or more sub-tasks. "
                 "Respond ONLY with a JSON array, no explanation, no markdown fences. "
                 "Each item must be: {\"worker\": \"task\"|\"email\"|\"calendar\", \"text\": \"...\"}. "
-                "worker='task' for to-dos/reminders with no specific person involved. "
-                "worker='email' for messages meant to be sent to a specific person. "
-                "worker='calendar' for scheduling meetings/appointments/events. "
-                "Example input: 'remind me to submit assignment tonight and email professor about extension' "
-                "Example output: [{\"worker\":\"task\",\"text\":\"submit assignment tonight\"},{\"worker\":\"email\",\"text\":\"email professor about extension\"}]"
+                "Rules to decide worker:\n"
+                "- 'calendar': ONLY for scheduling a meeting/appointment/event at a specific time with another person, or something explicitly called a 'meeting', 'appointment', or 'event'.\n"
+                "- 'email': ONLY when the message is about sending/telling something to a specific named person (mom, professor, boss, etc).\n"
+                "- 'task': everything else — personal to-dos, reminders, errands, deadlines — even if they mention a date/time like 'tomorrow' or 'tonight'. A reminder to do something yourself is ALWAYS 'task', never 'calendar', unless it explicitly says 'meeting' or 'appointment'.\n"
+                "Example: 'buy groceries tomorrow' -> task (not calendar, no meeting mentioned)\n"
+                "Example: 'schedule a meeting with professor friday' -> calendar\n"
+                "Example: 'remind me to call insurance' -> task\n"
+                "Example: 'tell mom dinner will be late' -> email"
             )},
             {"role": "user", "content": user_input}
         ]
