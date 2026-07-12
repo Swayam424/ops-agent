@@ -2,5 +2,9 @@
   {
     "text": "remind me to buy milk tomorrow",
     "due": "tomorrow"
+  },
+  {
+    "text": "9exit",
+    "due": "unspecified"
   }
 ]
