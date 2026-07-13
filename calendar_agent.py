@@ -6,9 +6,11 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from config import client
-from datetime import datetime as dt, timedelta
 CALENDAR_FILE = "calendar.json"
-SCOPES = ["https://www.googleapis.com/auth/calendar"]
+SCOPES = [
+    "https://www.googleapis.com/auth/calendar",
+    "https://www.googleapis.com/auth/gmail.compose"
+]
 
 def get_calendar_service():
     creds = None
@@ -57,10 +59,16 @@ def extract_datetime(request):
                 f"Current date/time: {today_str}. "
                 "The user will describe an event. Figure out what real calendar date/time they mean, "
                 "even if they use relative words like 'tomorrow', 'friday', 'next week', or a specific time like '3pm'. "
+                "IMPORTANT: when the user names a weekday (e.g. 'monday', 'friday') without saying 'next', "
+                "always interpret it as the UPCOMING occurrence of that weekday — if today IS that weekday, "
+                "assume next week's occurrence, not today. Never resolve a named weekday to a date earlier than "
+                "or equal to today unless the user explicitly says 'today'. "
                 "Respond with ONLY an ISO 8601 datetime in this exact format: YYYY-MM-DDTHH:MM:SS — nothing else. "
                 "If no date is mentioned in the request at all, respond with exactly: unspecified\n\n"
                 "Example: if today is Monday 2026-07-13, and the user says 'friday at 3pm', "
                 "respond: 2026-07-17T15:00:00\n"
+                "Example: if today is Monday 2026-07-13, and the user says 'monday at 10am', "
+                "respond: 2026-07-20T10:00:00 (next Monday, since today is already Monday)\n"
                 "Example: if the user says 'buy milk', respond: unspecified"
             )},
             {"role": "user", "content": request}
