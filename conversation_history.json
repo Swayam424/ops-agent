@@ -1,0 +1,27 @@
+[
+  {
+    "timestamp": "2026-07-15T12:29:00.022953",
+    "user": "schedule a meeting with professor friday at 3pm",
+    "response": "[calendar_agent] Saved event: 'schedule a meeting with professor friday at 3pm' (when: Friday Jul 17, 03:00 PM)\nReal event created: https://www.google.com/calendar/event?eid=NGd2YWdtMTBxOHBqdmJ0ODZwbGNsZTFicmcgbWFsbGlja3N3YXlhbTk5NEBt"
+  },
+  {
+    "timestamp": "2026-07-15T12:29:28.954314",
+    "user": "actually make that 5pm instead",
+    "response": "[calendar_agent] Saved event: 'update meeting with professor friday to 5pm' (when: Friday Jul 17, 05:00 PM)\nReal event created: https://www.google.com/calendar/event?eid=c3VpOG5lODhxdG5qcDFtajQzMXFvOWE3ZXMgbWFsbGlja3N3YXlhbTk5NEBt"
+  },
+  {
+    "timestamp": "2026-07-15T12:37:19.919292",
+    "user": "schedule a meeting with professor saturday at 2pm",
+    "response": "[calendar_agent] Saved event: 'schedule a meeting with professor saturday at 2pm' (when: Saturday Jul 18, 02:00 PM)\nReal event created: https://www.google.com/calendar/event?eid=djVvNm1sbm5sMGo4bWY1MDVvcDJrcDZxODggbWFsbGlja3N3YXlhbTk5NEBt"
+  },
+  {
+    "timestamp": "2026-07-15T12:50:19.330408",
+    "user": "schedule a meeting with professor sunday at 6pm",
+    "response": "[calendar_agent] Saved event: 'schedule a meeting with professor sunday at 6pm' (when: Sunday Jul 19, 06:00 PM)\nReal event created: https://www.google.com/calendar/event?eid=NGRlZGM3aTkzZjA4a3Y0c2k3OGNpbWlpczggbWFsbGlja3N3YXlhbTk5NEBt"
+  },
+  {
+    "timestamp": "2026-07-15T12:50:26.212512",
+    "user": "actually change it to 7pm",
+    "response": "[calendar_agent] Updated event: 'meeting with professor sunday at 7pm' (when: Sunday Jul 19, 07:00 PM)\nUpdated: https://www.google.com/calendar/event?eid=NGRlZGM3aTkzZjA4a3Y0c2k3OGNpbWlpczggbWFsbGlja3N3YXlhbTk5NEBt"
+  }
+]

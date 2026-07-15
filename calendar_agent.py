@@ -27,16 +27,33 @@ def create_google_event(text, start_dt):
     try:
         service = get_calendar_service()
         end_dt = start_dt + datetime.timedelta(hours=1)
-
         event = {
             "summary": text,
             "start": {"dateTime": start_dt.isoformat(), "timeZone": "Asia/Kolkata"},
             "end": {"dateTime": end_dt.isoformat(), "timeZone": "Asia/Kolkata"},
         }
         created = service.events().insert(calendarId="primary", body=event).execute()
-        return created.get("htmlLink")
+        return created.get("id"), created.get("htmlLink")
     except Exception as e:
         print(f"[error] Google Calendar event creation failed: {e}")
+        return None, None
+
+def update_google_event(event_id, text=None, start_dt=None):
+    try:
+        service = get_calendar_service()
+        event = service.events().get(calendarId="primary", eventId=event_id).execute()
+
+        if text:
+            event["summary"] = text
+        if start_dt:
+            end_dt = start_dt + datetime.timedelta(hours=1)
+            event["start"] = {"dateTime": start_dt.isoformat(), "timeZone": "Asia/Kolkata"}
+            event["end"] = {"dateTime": end_dt.isoformat(), "timeZone": "Asia/Kolkata"}
+
+        updated = service.events().update(calendarId="primary", eventId=event_id, body=event).execute()
+        return updated.get("htmlLink")
+    except Exception as e:
+        print(f"[error] Google Calendar event update failed: {e}")
         return None
 
 def load_events():
@@ -76,9 +93,10 @@ def extract_datetime(request):
     )
     return response.choices[0].message.content.strip()
 
-def handle_calendar(request):
+def handle_calendar(request, update_event_id=None):
     events = load_events()
     iso_datetime = extract_datetime(request)
+
     if iso_datetime == "unspecified":
         start_dt = dt.now() + timedelta(hours=1)
     else:
@@ -86,9 +104,23 @@ def handle_calendar(request):
             start_dt = dt.fromisoformat(iso_datetime)
         except ValueError:
             start_dt = dt.now() + timedelta(hours=1)
-    events.append({"text": request, "date": iso_datetime})
+
+    if update_event_id:
+        link = update_google_event(update_event_id, text=request, start_dt=start_dt)
+        for e in events:
+            if e.get("google_event_id") == update_event_id:
+                e["text"] = request
+                e["date"] = iso_datetime
+        save_events(events)
+        if link:
+            return f"[calendar_agent] Updated event: '{request}' (when: {start_dt.strftime('%A %b %d, %I:%M %p')})\nUpdated: {link}"
+        else:
+            return f"[calendar_agent] Tried to update event but failed."
+
+    event_id, link = create_google_event(request, start_dt)
+    events.append({"text": request, "date": iso_datetime, "google_event_id": event_id})
     save_events(events)
-    link = create_google_event(request, start_dt)
+
     if link:
         return f"[calendar_agent] Saved event: '{request}' (when: {start_dt.strftime('%A %b %d, %I:%M %p')})\nReal event created: {link}"
     else:

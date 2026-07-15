@@ -26,5 +26,27 @@
   {
     "text": "schedule a meeting with professor monday at 10am",
     "date": "2026-07-20T10:00:00"
+  },
+  {
+    "text": "schedule a test event tomorrow",
+    "date": "2026-07-15T00:00:00"
+  },
+  {
+    "text": "schedule a meeting with professor friday at 3pm",
+    "date": "2026-07-17T15:00:00"
+  },
+  {
+    "text": "update meeting with professor friday to 5pm",
+    "date": "2026-07-17T17:00:00"
+  },
+  {
+    "text": "schedule a meeting with professor saturday at 2pm",
+    "date": "2026-07-18T14:00:00",
+    "google_event_id": "v5o6mlnnl0j8mf505op2kp6q88"
+  },
+  {
+    "text": "meeting with professor sunday at 7pm",
+    "date": "2026-07-19T19:00:00",
+    "google_event_id": "4dedc7i93f08kv4si78cimiis8"
   }
 ]
