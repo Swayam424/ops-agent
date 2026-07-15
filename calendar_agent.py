@@ -6,11 +6,14 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from config import client
+
 CALENDAR_FILE = "calendar.json"
 SCOPES = [
     "https://www.googleapis.com/auth/calendar",
     "https://www.googleapis.com/auth/gmail.compose"
 ]
+
+IST = timezone(timedelta(hours=5, minutes=30))
 
 def get_calendar_service():
     creds = None
@@ -55,45 +58,6 @@ def update_google_event(event_id, text=None, start_dt=None):
     except Exception as e:
         print(f"[error] Google Calendar event update failed: {e}")
         return None
-
-def load_events():
-    if not os.path.exists(CALENDAR_FILE):
-        return []
-    with open(CALENDAR_FILE, "r") as f:
-        return json.load(f)
-
-def save_events(events):
-    with open(CALENDAR_FILE, "w") as f:
-        json.dump(events, f, indent=2)
-
-def extract_datetime(request):
-    now = dt.now()
-    today_str = now.strftime("%A, %Y-%m-%d %H:%M")
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[
-            {"role": "system", "content": (
-                f"Current date/time: {today_str}. "
-                "The user will describe an event. Figure out what real calendar date/time they mean, "
-                "even if they use relative words like 'tomorrow', 'friday', 'next week', or a specific time like '3pm'. "
-                "IMPORTANT: when the user names a weekday (e.g. 'monday', 'friday') without saying 'next', "
-                "always interpret it as the UPCOMING occurrence of that weekday — if today IS that weekday, "
-                "assume next week's occurrence, not today. Never resolve a named weekday to a date earlier than "
-                "or equal to today unless the user explicitly says 'today'. "
-                "Respond with ONLY an ISO 8601 datetime in this exact format: YYYY-MM-DDTHH:MM:SS — nothing else. "
-                "If no date is mentioned in the request at all, respond with exactly: unspecified\n\n"
-                "Example: if today is Monday 2026-07-13, and the user says 'friday at 3pm', "
-                "respond: 2026-07-17T15:00:00\n"
-                "Example: if today is Monday 2026-07-13, and the user says 'monday at 10am', "
-                "respond: 2026-07-20T10:00:00 (next Monday, since today is already Monday)\n"
-                "Example: if the user says 'buy milk', respond: unspecified"
-            )},
-            {"role": "user", "content": request}
-        ]
-    )
-    return response.choices[0].message.content.strip()
-
-IST = timezone(timedelta(hours=5, minutes=30))
 
 def find_free_slot(duration_minutes=60, search_days=7, work_start_hour=9, work_end_hour=20):
     try:
@@ -141,17 +105,60 @@ def find_free_slot(duration_minutes=60, search_days=7, work_start_hour=9, work_e
         print(f"[error] Freebusy lookup failed: {e}")
         return None
 
-def handle_calendar(request, update_event_id=None):
-    events = load_events()
-    iso_datetime = extract_datetime(request)
+def load_events():
+    if not os.path.exists(CALENDAR_FILE):
+        return []
+    with open(CALENDAR_FILE, "r") as f:
+        return json.load(f)
 
-    if iso_datetime == "unspecified":
-        start_dt = dt.now() + timedelta(hours=1)
+def save_events(events):
+    with open(CALENDAR_FILE, "w") as f:
+        json.dump(events, f, indent=2)
+
+def extract_datetime(request):
+    now = dt.now()
+    today_str = now.strftime("%A, %Y-%m-%d %H:%M")
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[
+            {"role": "system", "content": (
+                f"Current date/time: {today_str}. "
+                "The user will describe an event. Figure out what real calendar date/time they mean, "
+                "even if they use relative words like 'tomorrow', 'friday', 'next week', or a specific time like '3pm'. "
+                "IMPORTANT: when the user names a weekday (e.g. 'monday', 'friday') without saying 'next', "
+                "always interpret it as the UPCOMING occurrence of that weekday — if today IS that weekday, "
+                "assume next week's occurrence, not today. Never resolve a named weekday to a date earlier than "
+                "or equal to today unless the user explicitly says 'today'. "
+                "Respond with ONLY an ISO 8601 datetime in this exact format: YYYY-MM-DDTHH:MM:SS — nothing else. "
+                "If no date is mentioned in the request at all, respond with exactly: unspecified\n\n"
+                "Example: if today is Monday 2026-07-13, and the user says 'friday at 3pm', "
+                "respond: 2026-07-17T15:00:00\n"
+                "Example: if today is Monday 2026-07-13, and the user says 'monday at 10am', "
+                "respond: 2026-07-20T10:00:00 (next Monday, since today is already Monday)\n"
+                "Example: if the user says 'buy milk', respond: unspecified"
+            )},
+            {"role": "user", "content": request}
+        ]
+    )
+    return response.choices[0].message.content.strip()
+
+def handle_calendar(request, update_event_id=None, auto_find_slot=False):
+    events = load_events()
+
+    if auto_find_slot:
+        start_dt = find_free_slot()
+        if not start_dt:
+            return f"[calendar_agent] Couldn't find a free slot for: '{request}'"
+        iso_datetime = start_dt.isoformat()
     else:
-        try:
-            start_dt = dt.fromisoformat(iso_datetime)
-        except ValueError:
+        iso_datetime = extract_datetime(request)
+        if iso_datetime == "unspecified":
             start_dt = dt.now() + timedelta(hours=1)
+        else:
+            try:
+                start_dt = dt.fromisoformat(iso_datetime)
+            except ValueError:
+                start_dt = dt.now() + timedelta(hours=1)
 
     if update_event_id:
         link = update_google_event(update_event_id, text=request, start_dt=start_dt)
@@ -173,9 +180,3 @@ def handle_calendar(request, update_event_id=None):
         return f"[calendar_agent] Saved event: '{request}' (when: {start_dt.strftime('%A %b %d, %I:%M %p')})\nReal event created: {link}"
     else:
         return f"[calendar_agent] Saved event: '{request}' (when: {start_dt.strftime('%A %b %d, %I:%M %p')}) — but Google Calendar sync failed"
-if __name__ == "__main__":
-    slot = find_free_slot()
-    if slot:
-        print("Next free slot:", slot.strftime("%A %b %d, %I:%M %p"))
-    else:
-        print("No free slot found.")

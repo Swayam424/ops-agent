@@ -23,19 +23,25 @@ def decompose_request(user_input):
             messages=[
                 {"role": "system", "content": (
                     "Break the user's message into one or more sub-tasks. "
-                    "You have access to recent conversation history for context.\n\n"
+                    "You have access to recent conversation history for context — use it to resolve "
+                    "references like 'that meeting', 'the task I mentioned', or corrections like "
+                    "'actually make that 5pm instead'. If the current message is a correction/follow-up "
+                    "to something in the history, treat it as modifying that prior request, not a new one.\n\n"
                     f"Recent conversation:\n{context}\n\n"
                     "Respond ONLY with a JSON array, no explanation, no markdown fences. "
-                    "Each item must be: {\"worker\": \"task\"|\"email\"|\"calendar\", \"text\": \"...\", \"is_update\": true|false}. "
+                    "Each item must be: {\"worker\": \"task\"|\"email\"|\"calendar\", \"text\": \"...\", \"is_update\": true|false, \"needs_free_slot\": true|false}. "
                     "Set is_update=true ONLY if this message is clearly correcting/modifying something just discussed "
                     "(e.g. 'actually make that 5pm instead', 'change it to friday'). Otherwise is_update=false.\n"
+                    "Set needs_free_slot=true if the user wants you to FIND an available time yourself "
+                    "(e.g. 'find a free slot and schedule...', 'whenever I'm free', 'find time this week for...'). Otherwise false.\n"
                     "Rules to decide worker:\n"
                     "- 'calendar': ONLY for scheduling a meeting/appointment/event at a specific time with another person, or something explicitly called a 'meeting', 'appointment', or 'event'.\n"
                     "- 'email': ONLY when the message is about sending/telling something to a specific named person (mom, professor, boss, etc).\n"
                     "- 'task': everything else — personal to-dos, reminders, errands, deadlines — even if they mention a date/time like 'tomorrow' or 'tonight'. A reminder to do something yourself is ALWAYS 'task', never 'calendar', unless it explicitly says 'meeting' or 'appointment'.\n"
-                    "Example: 'buy groceries tomorrow' -> [{\"worker\":\"task\",\"text\":\"buy groceries tomorrow\",\"is_update\":false}]\n"
-                    "Example: 'schedule a meeting with professor friday' -> [{\"worker\":\"calendar\",\"text\":\"schedule a meeting with professor friday\",\"is_update\":false}]\n"
-                    "Example: (after scheduling a professor meeting) 'actually make that 5pm instead' -> [{\"worker\":\"calendar\",\"text\":\"meeting with professor at 5pm\",\"is_update\":true}]"
+                    "Example: 'buy groceries tomorrow' -> [{\"worker\":\"task\",\"text\":\"buy groceries tomorrow\",\"is_update\":false,\"needs_free_slot\":false}]\n"
+                    "Example: 'schedule a meeting with professor friday' -> [{\"worker\":\"calendar\",\"text\":\"schedule a meeting with professor friday\",\"is_update\":false,\"needs_free_slot\":false}]\n"
+                    "Example: (after scheduling a professor meeting) 'actually make that 5pm instead' -> [{\"worker\":\"calendar\",\"text\":\"meeting with professor at 5pm\",\"is_update\":true,\"needs_free_slot\":false}]\n"
+                    "Example: 'find a free slot this week and schedule a meeting with my professor' -> [{\"worker\":\"calendar\",\"text\":\"meeting with professor\",\"is_update\":false,\"needs_free_slot\":true}]"
                 )},
                 {"role": "user", "content": user_input}
             ]
@@ -79,6 +85,7 @@ def route_request(user_input):
         worker = st.get("worker")
         text = st.get("text", user_input)
         is_update = st.get("is_update", False)
+        needs_slot = st.get("needs_free_slot", False)
         try:
             if worker == "email":
                 results.append(handle_email(text))
@@ -86,6 +93,8 @@ def route_request(user_input):
                 if is_update:
                     event_id = get_last_calendar_event_id()
                     results.append(handle_calendar(text, update_event_id=event_id))
+                elif needs_slot:
+                    results.append(handle_calendar(text, auto_find_slot=True))
                 else:
                     results.append(handle_calendar(text))
             else:
