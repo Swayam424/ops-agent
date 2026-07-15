@@ -1,5 +1,5 @@
 import datetime
-from datetime import datetime as dt, timedelta
+from datetime import datetime as dt, timedelta, timezone
 import json
 import os
 from google.oauth2.credentials import Credentials
@@ -93,6 +93,54 @@ def extract_datetime(request):
     )
     return response.choices[0].message.content.strip()
 
+IST = timezone(timedelta(hours=5, minutes=30))
+
+def find_free_slot(duration_minutes=60, search_days=7, work_start_hour=9, work_end_hour=20):
+    try:
+        service = get_calendar_service()
+        now = dt.now(IST)
+        time_min = now.isoformat()
+        time_max = (now + timedelta(days=search_days)).isoformat()
+
+        body = {
+            "timeMin": time_min,
+            "timeMax": time_max,
+            "timeZone": "Asia/Kolkata",
+            "items": [{"id": "primary"}]
+        }
+        result = service.freebusy().query(body=body).execute()
+        busy_periods = result["calendars"]["primary"]["busy"]
+
+        busy_ranges = [
+            (dt.fromisoformat(b["start"]), dt.fromisoformat(b["end"]))
+            for b in busy_periods
+        ]
+
+        candidate = now.replace(minute=0, second=0, microsecond=0) + timedelta(hours=1)
+        end_search = now + timedelta(days=search_days)
+
+        while candidate < end_search:
+            if candidate.hour < work_start_hour:
+                candidate = candidate.replace(hour=work_start_hour)
+            if candidate.hour >= work_end_hour:
+                candidate = (candidate + timedelta(days=1)).replace(hour=work_start_hour)
+                continue
+
+            slot_end = candidate + timedelta(minutes=duration_minutes)
+            overlaps = any(
+                candidate < b_end and slot_end > b_start
+                for b_start, b_end in busy_ranges
+            )
+            if not overlaps:
+                return candidate
+
+            candidate += timedelta(minutes=30)
+
+        return None
+    except Exception as e:
+        print(f"[error] Freebusy lookup failed: {e}")
+        return None
+
 def handle_calendar(request, update_event_id=None):
     events = load_events()
     iso_datetime = extract_datetime(request)
@@ -125,3 +173,9 @@ def handle_calendar(request, update_event_id=None):
         return f"[calendar_agent] Saved event: '{request}' (when: {start_dt.strftime('%A %b %d, %I:%M %p')})\nReal event created: {link}"
     else:
         return f"[calendar_agent] Saved event: '{request}' (when: {start_dt.strftime('%A %b %d, %I:%M %p')}) — but Google Calendar sync failed"
+if __name__ == "__main__":
+    slot = find_free_slot()
+    if slot:
+        print("Next free slot:", slot.strftime("%A %b %d, %I:%M %p"))
+    else:
+        print("No free slot found.")
