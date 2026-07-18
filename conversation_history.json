@@ -48,5 +48,20 @@
     "timestamp": "2026-07-18T12:25:02.752521",
     "user": "actually make that today instead",
     "response": "[task_manager] Updated task: 'call the bank today' (due: today)"
+  },
+  {
+    "timestamp": "2026-07-18T12:31:40.961395",
+    "user": "tell mom i'll be late for dinner",
+    "response": "[email_agent] Saved draft: 'tell mom i'll be late for dinner' (to: mom)\nReal Gmail draft created (id: r-8071232786737624163) \u2014 open Gmail Drafts to review/send"
+  },
+  {
+    "timestamp": "2026-07-18T12:31:50.359662",
+    "user": "actually tell her i'll be on time",
+    "response": "[email_agent] Updated draft: 'i'll be on time' (to: unspecified)"
+  },
+  {
+    "timestamp": "2026-07-18T12:37:42.075335",
+    "user": "tell mom i'll be late for dinner",
+    "response": "[email_agent] Real email SENT to Mom (sunitamallick025@gmail.com)"
   }
 ]
