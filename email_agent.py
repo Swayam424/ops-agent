@@ -28,7 +28,7 @@ def create_gmail_draft(to_name, subject, body_text):
     try:
         service = get_gmail_service()
         message = MIMEText(body_text)
-        message["to"] = ""  # left blank since we don't have a real email yet
+        message["to"] = ""
         message["subject"] = subject
         raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
 
@@ -39,6 +39,24 @@ def create_gmail_draft(to_name, subject, body_text):
         return draft.get("id")
     except Exception as e:
         print(f"[error] Gmail draft creation failed: {e}")
+        return None
+
+def update_gmail_draft(draft_id, subject, body_text):
+    try:
+        service = get_gmail_service()
+        message = MIMEText(body_text)
+        message["to"] = ""
+        message["subject"] = subject
+        raw = base64.urlsafe_b64encode(message.as_bytes()).decode()
+
+        updated = service.users().drafts().update(
+            userId="me",
+            id=draft_id,
+            body={"message": {"raw": raw}}
+        ).execute()
+        return updated.get("id")
+    except Exception as e:
+        print(f"[error] Gmail draft update failed: {e}")
         return None
 
 def load_emails():
@@ -61,14 +79,29 @@ def extract_recipient(request):
     )
     return response.choices[0].message.content.strip()
 
-def handle_email(request):
+def handle_email(request, update_draft_id=None):
     emails = load_emails()
     to = extract_recipient(request)
-    emails.append({"text": request, "to": to})
-    save_emails(emails)
 
+    if update_draft_id:
+        draft_id = update_gmail_draft(update_draft_id, subject=f"Message for {to}", body_text=request)
+        for e in emails:
+            if e.get("gmail_draft_id") == update_draft_id:
+                e["text"] = request
+                e["to"] = to
+        save_emails(emails)
+        if draft_id:
+            return f"[email_agent] Updated draft: '{request}' (to: {to})"
+        else:
+            return f"[email_agent] Tried to update draft but failed."
+
+    emails.append({"text": request, "to": to})
     draft_id = create_gmail_draft(to, subject=f"Message for {to}", body_text=request)
+
     if draft_id:
+        emails[-1]["gmail_draft_id"] = draft_id
+        save_emails(emails)
         return f"[email_agent] Saved draft: '{request}' (to: {to})\nReal Gmail draft created (id: {draft_id}) — open Gmail Drafts to review/send"
     else:
+        save_emails(emails)
         return f"[email_agent] Saved draft: '{request}' (to: {to}) — but Gmail draft creation failed"

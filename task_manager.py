@@ -24,9 +24,15 @@ def extract_due_date(request):
     )
     return response.choices[0].message.content.strip()
 
-def handle_task(request):
+def handle_task(request, update_index=None):
     tasks = load_tasks()
     due = extract_due_date(request)
+
+    if update_index is not None and 0 <= update_index < len(tasks):
+        tasks[update_index] = {"text": request, "due": due}
+        save_tasks(tasks)
+        return f"[task_manager] Updated task: '{request}' (due: {due})"
+
     tasks.append({"text": request, "due": due})
     save_tasks(tasks)
     return f"[task_manager] Saved task: '{request}' (due: {due})"

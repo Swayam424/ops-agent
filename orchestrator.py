@@ -34,13 +34,18 @@ def decompose_request(user_input):
                     "(e.g. 'actually make that 5pm instead', 'change it to friday'). Otherwise is_update=false.\n"
                     "Set needs_free_slot=true if the user wants you to FIND an available time yourself "
                     "(e.g. 'find a free slot and schedule...', 'whenever I'm free', 'find time this week for...'). Otherwise false.\n"
-                    "Rules to decide worker:\n"
+                    "CRITICAL: when is_update=true, the worker MUST match the worker type of the specific item being corrected, "
+                    "which you can infer from the most recent conversation turn's content (e.g. if the last response mentions "
+                    "'[task_manager]', the update is worker='task'; if '[calendar_agent]', worker='calendar'; if '[email_agent]', worker='email'). "
+                    "Do not guess randomly — look at what was actually just created in the conversation history.\n"
+                    "Rules to decide worker (when is_update=false):\n"
                     "- 'calendar': ONLY for scheduling a meeting/appointment/event at a specific time with another person, or something explicitly called a 'meeting', 'appointment', or 'event'.\n"
                     "- 'email': ONLY when the message is about sending/telling something to a specific named person (mom, professor, boss, etc).\n"
                     "- 'task': everything else — personal to-dos, reminders, errands, deadlines — even if they mention a date/time like 'tomorrow' or 'tonight'. A reminder to do something yourself is ALWAYS 'task', never 'calendar', unless it explicitly says 'meeting' or 'appointment'.\n"
                     "Example: 'buy groceries tomorrow' -> [{\"worker\":\"task\",\"text\":\"buy groceries tomorrow\",\"is_update\":false,\"needs_free_slot\":false}]\n"
                     "Example: 'schedule a meeting with professor friday' -> [{\"worker\":\"calendar\",\"text\":\"schedule a meeting with professor friday\",\"is_update\":false,\"needs_free_slot\":false}]\n"
-                    "Example: (after scheduling a professor meeting) 'actually make that 5pm instead' -> [{\"worker\":\"calendar\",\"text\":\"meeting with professor at 5pm\",\"is_update\":true,\"needs_free_slot\":false}]\n"
+                    "Example: (after '[task_manager] Saved task: call the bank tomorrow') 'actually make that today instead' -> [{\"worker\":\"task\",\"text\":\"call the bank today\",\"is_update\":true,\"needs_free_slot\":false}]\n"
+                    "Example: (after '[calendar_agent] Saved event: meeting with professor friday at 3pm') 'actually make that 5pm instead' -> [{\"worker\":\"calendar\",\"text\":\"meeting with professor at 5pm\",\"is_update\":true,\"needs_free_slot\":false}]\n"
                     "Example: 'find a free slot this week and schedule a meeting with my professor' -> [{\"worker\":\"calendar\",\"text\":\"meeting with professor\",\"is_update\":false,\"needs_free_slot\":true}]"
                 )},
                 {"role": "user", "content": user_input}
@@ -60,6 +65,17 @@ def get_last_calendar_event_id():
     for e in reversed(events):
         if e.get("google_event_id"):
             return e["google_event_id"]
+    return None
+
+def get_last_task_index():
+    tasks = load_tasks()
+    return len(tasks) - 1 if tasks else None
+
+def get_last_email_draft_id():
+    emails = load_emails()
+    for e in reversed(emails):
+        if e.get("gmail_draft_id"):
+            return e["gmail_draft_id"]
     return None
 
 def route_request(user_input):
@@ -88,7 +104,11 @@ def route_request(user_input):
         needs_slot = st.get("needs_free_slot", False)
         try:
             if worker == "email":
-                results.append(handle_email(text))
+                if is_update:
+                    draft_id = get_last_email_draft_id()
+                    results.append(handle_email(text, update_draft_id=draft_id))
+                else:
+                    results.append(handle_email(text))
             elif worker == "calendar":
                 if is_update:
                     event_id = get_last_calendar_event_id()
@@ -98,7 +118,11 @@ def route_request(user_input):
                 else:
                     results.append(handle_calendar(text))
             else:
-                results.append(handle_task(text))
+                if is_update:
+                    idx = get_last_task_index()
+                    results.append(handle_task(text, update_index=idx))
+                else:
+                    results.append(handle_task(text))
         except Exception as e:
             results.append(f"[error] Failed to process '{text}': {e}")
     result = "\n".join(results)

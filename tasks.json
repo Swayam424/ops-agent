@@ -10,5 +10,13 @@
   {
     "text": "call my doctor today",
     "due": "today"
+  },
+  {
+    "text": "call the bank tomorrow",
+    "due": "tomorrow"
+  },
+  {
+    "text": "call the bank today",
+    "due": "today"
   }
 ]

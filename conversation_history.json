@@ -28,5 +28,25 @@
     "timestamp": "2026-07-15T21:02:44.700766",
     "user": "find a free slot this week and schedule a meeting with my professor",
     "response": "[calendar_agent] Saved event: 'meeting with professor' (when: Thursday Jul 16, 09:00 AM)\nReal event created: https://www.google.com/calendar/event?eid=MDFoODU2Ym51amZubjJvZzRmajVxZjdtNDggbWFsbGlja3N3YXlhbTk5NEBt"
+  },
+  {
+    "timestamp": "2026-07-17T20:34:05.777734",
+    "user": "remind me to call the bank tomorrow",
+    "response": "[task_manager] Saved task: 'call the bank tomorrow' (due: tomorrow)"
+  },
+  {
+    "timestamp": "2026-07-17T20:34:28.723925",
+    "user": "actually make that today instead",
+    "response": "[calendar_agent] Updated event: 'meeting with professor today' (when: Friday Jul 17, 12:00 AM)\nUpdated: https://www.google.com/calendar/event?eid=MDFoODU2Ym51amZubjJvZzRmajVxZjdtNDggbWFsbGlja3N3YXlhbTk5NEBt"
+  },
+  {
+    "timestamp": "2026-07-18T12:24:54.204900",
+    "user": "remind me to call the bank tomorrow",
+    "response": "[task_manager] Saved task: 'call the bank tomorrow' (due: tomorrow)"
+  },
+  {
+    "timestamp": "2026-07-18T12:25:02.752521",
+    "user": "actually make that today instead",
+    "response": "[task_manager] Updated task: 'call the bank today' (due: today)"
   }
 ]
